@@ -36,6 +36,7 @@ public class Network {
     	 /* Initialization of the network components */
         if (context.equals("network"))
           {
+            //--1
             System.out.println("\n Activating the network ...");
             clientIP = "192.168.2.0";
             serverIP = "216.120.40.10";
@@ -43,6 +44,7 @@ public class Network {
             serverConnectionStatus = "idle";
             portID = 0;
             maxNbPackets = 10;
+            //--myComment 'Transactions' is an array, defined as a class variable above
             inComingPacket = new Transactions[maxNbPackets];
             outGoingPacket = new Transactions[maxNbPackets];
             for (i=0; i < maxNbPackets; i++)
@@ -58,6 +60,8 @@ public class Network {
             networkStatus = "active";
         }
         else /* Activate network components for client or server */
+            //--4 (context='server')
+            //--10 (context='client')
             System.out.println("\n Activating network components for " + context + "...");
       }     
          
@@ -552,6 +556,7 @@ public class Network {
      */
     public void run()
     {	
+        //--2
     	System.out.println("\n DEBUG : Network.run() - starting network thread");
     	
     	while (true)
