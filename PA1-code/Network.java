@@ -1,15 +1,8 @@
-
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 /** Network class
  *
  * @author Kerly Titus
  */
-public class Network {
+public class Network extends Thread {
     
     private static int maxNbPackets;                           /* Maximum number of simultaneous transactions handled by the network buffer */
     private static int inputIndexClient, inputIndexServer, outputIndexServer, outputIndexClient;                   /* Network buffer indices for accessing the input buffer (inputIndexClient, outputIndexServer) and output buffer (inputIndexServer, outputIndexClient) */
@@ -29,6 +22,7 @@ public class Network {
      * @return 
      * @param
      */
+    // -- myComment: Constructor
      Network(String context)
       { 
     	 int i;  
@@ -367,7 +361,9 @@ public class Network {
             inComingPacket[inputIndexClient].setTransactionError(inPacket.getTransactionError());
             inComingPacket[inputIndexClient].setTransactionStatus("transferred");
             
+            //--17
             System.out.println("\n DEBUG : Network.send() - index inputIndexClient " + inputIndexClient);
+            //--18
             System.out.println("\n DEBUG : Network.send() - account number " + inComingPacket[inputIndexClient].getAccountNumber());
             
             
@@ -376,7 +372,7 @@ public class Network {
             if (getinputIndexClient() == getoutputIndexServer())
             {	
             	setInBufferStatus("full");
-            
+                //--20
             	System.out.println("\n DEBUG : Network.send() - inComingBuffer status " + getInBufferStatus());
             }
             else
@@ -456,7 +452,7 @@ public class Network {
      * 
      */
          public boolean transferIn(Transactions inPacket)
-        {
+        {//--22
 		System.out.println("\n DEBUG : Network.transferIn - account number " + inComingPacket[outputIndexServer].getAccountNumber());
             inPacket.setAccountNumber(inComingPacket[outputIndexServer].getAccountNumber());
             inPacket.setOperationType(inComingPacket[outputIndexServer].getOperationType());
@@ -464,8 +460,9 @@ public class Network {
             inPacket.setTransactionBalance(inComingPacket[outputIndexServer].getTransactionBalance());
             inPacket.setTransactionError(inComingPacket[outputIndexServer].getTransactionError());
             inPacket.setTransactionStatus("received");
-           
+            //--23
             System.out.println("\n DEBUG : Network.transferIn() - index outputIndexServer " + outputIndexServer);
+            //--24
             System.out.println("\n DEBUG : Network.transferIn() - account number " + inPacket.getAccountNumber());
             
            setoutputIndexServer(((getoutputIndexServer() + 1) % getMaxNbPackets()));	/* Increment the input buffer index for the server */
@@ -543,11 +540,7 @@ public class Network {
 	    {
 	        return ("\n Network status " + getNetworkStatus() + "Input buffer " + getInBufferStatus() + "Output buffer " + getOutBufferStatus());
 	    }
-    
-     /***********************************************************************************************************************************************
-      * TODO : implement the method Run() to execute the server thread				 																*
-      * *********************************************************************************************************************************************/
-	     
+
     /**
      *  Code for the run method
      * 
@@ -558,10 +551,18 @@ public class Network {
     {	
         //--2
     	System.out.println("\n DEBUG : Network.run() - starting network thread");
-    	
-    	while (true)
-    	{
-		/* Implement here the code for the run method ... */
-    	}    
+
+        //the Thread checks constantly for the Network status and keeps it alive as long as it is 'active'
+    	while (getNetworkStatus().equals("active"))
+    	{    
+            try {
+                Thread.sleep(1000);
+                System.out.println("\n PING: Network is alive ");
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            
+    	}
+        System.out.println("\n PING: Network is ending ");    
     }
 }

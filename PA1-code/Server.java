@@ -15,13 +15,13 @@ import java.util.InputMismatchException;
  * @author Kerly Titus
  */
 
-public class Server {
+public class Server extends Thread {
   
 	int numberOfTransactions;         /* Number of transactions handled by the server */
 	int numberOfAccounts;             /* Number of accounts stored in the server */
 	int maxNbAccounts;                /* maximum number of transactions */
 	Transactions transaction;         /* Transaction being processed */
-	Network objNetwork;               /* Server object to handle network operations */
+	Network objNetworkServer;               /* Server object to handle network operations */
 	Accounts [] account;              /* Accounts to be accessed or updated */
   
     /** 
@@ -32,17 +32,20 @@ public class Server {
      */
     Server()
     {
+      //--3
       System.out.println("\n Initializing the server ...");
       numberOfTransactions = 0;
       numberOfAccounts = 0;
       maxNbAccounts = 100;
       transaction = new Transactions();
       account = new Accounts[maxNbAccounts];
-      objNetwork = new Network("server");
+      objNetworkServer = new Network("server");
+      //--5
       System.out.println("\n Inializing the Accounts database ...");
       initializeAccounts( );
+      //--7
       System.out.println("\n Connecting server to network ...");
-      if (!(objNetwork.connect(objNetwork.getServerIP())))
+      if (!(objNetworkServer.connect(objNetworkServer.getServerIP())))
       {
         System.out.println("\n Terminating server application, network unavailable");
         System.exit(0);
@@ -128,7 +131,8 @@ public class Server {
         
         try
         {
-         inputStream = new Scanner(new FileInputStream("account.txt"));
+         inputStream = new Scanner(new FileInputStream("C:\\n" + //
+                          "ika_chychkova\\repos\\a1_concurrency\\a1\\PA1-code\\account.txt"));
         }
         catch(FileNotFoundException e)
         {
@@ -154,7 +158,7 @@ public class Server {
             i++;
         }
         setNumberOfAccounts(i);			/* Record the number of accounts processed */
-        
+        //--6
         System.out.println("\n DEBUG : Server.initializeAccounts() " + getNumberOfAccounts() + " accounts processed");
         
         inputStream.close( );
@@ -190,15 +194,15 @@ public class Server {
          double newBalance; 		/* Updated account balance */
               
          /* Process the accounts until the client disconnects */
-         while ((!objNetwork.getClientConnectionStatus().equals("disconnected")))
+         while ((!objNetworkServer.getClientConnectionStatus().equals("disconnected")))
          { 
-        	 /* while( (objNetwork.getInBufferStatus().equals("empty"))); */  /* Alternatively, busy-wait until the network input buffer is available */
+        	 /* while( (objNetworkServer.getInBufferStatus().equals("empty"))); */  /* Alternatively, busy-wait until the network input buffer is available */
         	 
-        	 if (!objNetwork.getInBufferStatus().equals("empty"))
-        	 {
+        	 if (!objNetworkServer.getInBufferStatus().equals("empty"))
+        	 {  //--21
         		 System.out.println("\n DEBUG : Server.processTransactions() - transferring in account " + trans.getAccountNumber());
         		 
-        		 objNetwork.transferIn(trans);                              /* Transfer a transaction from the network input buffer */
+        		 objNetworkServer.transferIn(trans);                              /* Transfer a transaction from the network input buffer */
              
         		 accIndex = findAccount(trans.getAccountNumber());
         		 /* Process deposit operation */
@@ -231,11 +235,11 @@ public class Server {
                             System.out.println("\n DEBUG : Server.processTransactions() - Obtaining balance from account" + trans.getAccountNumber());
         				 } 
         		        		 
-        		 // while( (objNetwork.getOutBufferStatus().equals("full"))); /* Alternatively,  busy-wait until the network output buffer is available */
+        		 // while( (objNetworkServer.getOutBufferStatus().equals("full"))); /* Alternatively,  busy-wait until the network output buffer is available */
                                                            
         		 System.out.println("\n DEBUG : Server.processTransactions() - transferring out account " + trans.getAccountNumber());
         		 
-        		 objNetwork.transferOut(trans);                            		/* Transfer a completed transaction from the server to the network output buffer */
+        		 objNetworkServer.transferOut(trans);                            		/* Transfer a completed transaction from the server to the network output buffer */
         		 setNumberOfTransactions( (getNumberOfTransactions() +  1) ); 	/* Count the number of transactions processed */
         	 }
          }
@@ -293,13 +297,9 @@ public class Server {
      */
      public String toString() 
      {	
-    	 return ("\n server IP " + objNetwork.getServerIP() + "connection status " + objNetwork.getServerConnectionStatus() + "Number of accounts " + getNumberOfAccounts());
+    	 return ("\n server IP " + objNetworkServer.getServerIP() + "connection status " + objNetworkServer.getServerConnectionStatus() + "Number of accounts " + getNumberOfAccounts());
      }
-     
-     /* *********************************************************************************************************************************************
-      * TODO : implement the method Run() to execute the server thread				 																*
-      * *********************************************************************************************************************************************/
-     
+
     /**
      * Code for the run method
      * 
@@ -308,14 +308,41 @@ public class Server {
      */
     public void run()
     {   Transactions trans = new Transactions();
-    	long serverStartTime, serverEndTime;
-
-    	System.out.println("\n DEBUG : Server.run() - starting server thread " + objNetwork.getServerConnectionStatus());
+    	// long serverStartTime, serverEndTime;
+        //--8 context: objNetworkServer.getServerConnectionStatus() returns 'connected'
+    	System.out.println("\n DEBUG : Server.run() - starting server thread " + objNetworkServer.getServerConnectionStatus());
     	
-    	/* Implement the code for the run method */
-        
-        System.out.println("\n Terminating server thread - " + " Running time " + (serverEndTime - serverStartTime) + " milliseconds");
-           
+        //--myComment run server while it's network status is connected
+        while(objNetworkServer.getServerConnectionStatus().equals("connected") && !objNetworkServer.getOutBufferStatus().equals("full") && !objNetworkServer.getOutBufferStatus().equals("full"))
+    	{
+            try {
+                
+                Thread.sleep(1000);
+                System.out.println("\n PING: Server Network is alive & waiting for input or output buffer");
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        while(objNetworkServer.getServerConnectionStatus().equals("connected") && objNetworkServer.getInBufferStatus().equals("full")  )
+    	{
+            try {
+                Thread.sleep(1000);
+                System.out.println("\n PING: Server Network is alive & detected InBuffer=FULL");
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        while(objNetworkServer.getServerConnectionStatus().equals("connected") && objNetworkServer.getOutBufferStatus().equals("full")  )
+    	{
+            try {
+                Thread.sleep(1000);
+                System.out.println("\n PING: Server Network is alive & detected OutBuffer=FULL");
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        // System.out.println("\n Terminating server thread - " + " Running time " + (serverEndTime - serverStartTime) + " milliseconds");
     }
 }
 
