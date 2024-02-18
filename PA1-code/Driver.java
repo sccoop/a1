@@ -20,13 +20,13 @@ public class Driver {
         objServer.start();
 
         Client objClientSend = new Client("sending");
-        // Client objClientReceiving = new Client("receiving");
+        Client objClientReceiving = new Client("receiving");
         
-        // objClientSend.start();
+        objClientSend.start();     
+        objClientReceiving.start();
 
-        objClientSend.start();
-        // objClientReceiving.start();
-        
+        System.out.println("\n PING: last statement in Driver");
+   
         //--myComment    order of threads launch/exit --based on printouts
         //--myComment    launch -- 1.Network 2.Server 3.Client.sending 4.Client.receiving
         //--myComment    terminate -- 1.Client.sending 2.Client.receiving 3.Server 4.Network (last)

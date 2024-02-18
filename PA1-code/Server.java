@@ -315,9 +315,9 @@ public class Server extends Thread {
         //--8 context: objNetworkServer.getServerConnectionStatus() returns 'connected'
     	System.out.println("\n DEBUG : Server.run() - starting server thread " + objNetworkServer.getServerConnectionStatus());
     	
-
         processTransactions(trans);
-
+    	
+        objNetworkServer.disconnect("216.120.40.10");
         serverEndTime= System.currentTimeMillis();
         System.out.println("\n Terminating server thread - " + " Running time " + (serverEndTime - serverStartTime) + " milliseconds");
     }

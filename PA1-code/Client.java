@@ -226,13 +226,14 @@ public class Client extends Thread{
         if(getClientOperation().equals("sending"))
         {
             try {
-
-                // System.out.println("\n PING: Client Sending Transactions!");
                  sendTransactions();
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
+                
+            } catch (Exception e) {
                 e.printStackTrace();
             }
+            
+            objNetworkClient.setClientConnectionStatus("inactive");
+
             sendClientEndTime = System.currentTimeMillis();
             System.out.println("\n Terminating Client "+ getClientOperation() + " thread - " + " Running time " + (sendClientEndTime - sendClientStartTime) + " milliseconds");
         }
@@ -240,11 +241,10 @@ public class Client extends Thread{
         {
             try {
                 receiveTransactions(transact);
-                // Thread.sleep(1000);
-                // System.out.println("\n PING: Server Receiving is alive");
             } catch (Exception e) {
                 e.printStackTrace();
             }
+            objNetworkClient.disconnect("192.168.2.0");
 
             receiveClientEndTime = System.currentTimeMillis();
             System.out.println("\n Terminating Client "+ getClientOperation() + " thread - " + " Running time " + (receiveClientEndTime - receiveClientStartTime) + " milliseconds");

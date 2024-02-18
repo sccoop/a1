@@ -362,9 +362,9 @@ public class Network extends Thread {
             inComingPacket[inputIndexClient].setTransactionStatus("transferred");
             
             //--17
-            System.out.println("\n DEBUG : Network.send() - index inputIndexClient " + inputIndexClient);
+            // System.out.println("\n DEBUG : Network.send() - index inputIndexClient " + inputIndexClient);
             //--18
-            System.out.println("\n DEBUG : Network.send() - account number " + inComingPacket[inputIndexClient].getAccountNumber());
+            // System.out.println("\n DEBUG : Network.send() - account number " + inComingPacket[inputIndexClient].getAccountNumber());
             
             
             setinputIndexClient(((getinputIndexClient( ) + 1) % getMaxNbPackets ()));	/* Increment the input buffer index  for the client */
@@ -395,8 +395,8 @@ public class Network extends Thread {
             outPacket.setTransactionError(outGoingPacket[outputIndexClient].getTransactionError());
             outPacket.setTransactionStatus("done");
             
-            System.out.println("\n DEBUG : Network.receive() - index outputIndexClient " + outputIndexClient);
-            System.out.println("\n DEBUG : Network.receive() - account number " + outPacket.getAccountNumber());
+            // System.out.println("\n DEBUG : Network.receive() - index outputIndexClient " + outputIndexClient);
+            // System.out.println("\n DEBUG : Network.receive() - account number " + outPacket.getAccountNumber());
             
             setoutputIndexClient(((getoutputIndexClient( ) + 1) % getMaxNbPackets( ))); /* Increment the output buffer index for the client */
             /* Check if output buffer is empty */
@@ -553,7 +553,9 @@ public class Network extends Thread {
     	System.out.println("\n DEBUG : Network.run() - starting network thread");
 
         //the Thread checks constantly for the Network status and keeps it alive as long as it is 'active'
-    	while (getNetworkStatus().equals("active"))
+
+        // while getClientConnectionStatus does not return "inactive" -- do the while loop
+    	while (!getClientConnectionStatus().equals("disconnected") || !getServerConnectionStatus().equals("disconnected"))
     	{    
             try {
                 Thread.sleep(1000);
@@ -561,8 +563,7 @@ public class Network extends Thread {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            
     	}
-        // System.out.println("\n PING: Network is ending ");    
+        System.out.println("\n Terminating network thread - Client disconnected Server disconnected");    
     }
 }
