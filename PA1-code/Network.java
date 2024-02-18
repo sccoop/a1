@@ -557,12 +557,12 @@ public class Network extends Thread {
     	{    
             try {
                 Thread.sleep(1000);
-                System.out.println("\n PING: Network is alive ");
+                // System.out.println("\n PING: Network is alive ");
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
             
     	}
-        System.out.println("\n PING: Network is ending ");    
+        // System.out.println("\n PING: Network is ending ");    
     }
 }

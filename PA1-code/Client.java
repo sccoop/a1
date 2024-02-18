@@ -162,7 +162,7 @@ public class Client extends Thread{
          while (i < getNumberOfTransactions())
          {  
             // while( objNetworkClient.getInBufferStatus().equals("full") );     /* Alternatively, busy-wait until the network input buffer is available */
-                                             	
+            Thread.yield();                                 	
             transaction[i].setTransactionStatus("sent");   /* Set current transaction status */
            //--16
             System.out.println("\n DEBUG : Client.sendTransactions() - sending transaction on account " + transaction[i].getAccountNumber());
@@ -186,7 +186,7 @@ public class Client extends Thread{
          while (i < getNumberOfTransactions())
          {     
         	 // while( objNetworkClient.getOutBufferStatus().equals("empty"));  	/* Alternatively, busy-wait until the network output buffer is available */
-                                                                        	
+            Thread.yield();                                                            	
             objNetworkClient.receive(transact);                               	/* Receive updated transaction from the network buffer */
             
             System.out.println("\n DEBUG : Client.receiveTransactions() - receiving updated transaction on account " + transact.getAccountNumber());
@@ -202,8 +202,7 @@ public class Client extends Thread{
      * @return String representation
      * @param 
      */
-     public String toString() 
-     {
+     public String toString() {
     	 return ("\n client IP " + objNetworkClient.getClientIP() + " Connection status" + objNetworkClient.getClientConnectionStatus() + "Number of transactions " + getNumberOfTransactions());
      }
     
@@ -219,30 +218,36 @@ public class Client extends Thread{
         
     	Transactions transact = new Transactions();
     	long sendClientStartTime, sendClientEndTime, receiveClientStartTime, receiveClientEndTime;
+        sendClientStartTime = System.currentTimeMillis();
+        receiveClientStartTime = System.currentTimeMillis();
 
         // --19 line doesn't exist yet (should start the "client receiving thread")
         //--myComment run server while it's network status is connected
         if(getClientOperation().equals("sending"))
         {
             try {
-                System.out.println("\n PING: Client Sending Transactions!");
-                sendTransactions();
+
+                // System.out.println("\n PING: Client Sending Transactions!");
+                 sendTransactions();
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            // System.out.println("\n Terminating client"+ getClientOperation() + "thread - " + " Running time " + (sendClientEndTime - sendClientStartTime) + " milliseconds");
-            System.out.println("\n PING: Client Sending Thread ending!!!");
+            sendClientEndTime = System.currentTimeMillis();
+            System.out.println("\n Terminating Client "+ getClientOperation() + " thread - " + " Running time " + (sendClientEndTime - sendClientStartTime) + " milliseconds");
         }
         if(getClientOperation().equals("receiving"))
         {
             try {
-                Thread.sleep(1000);
-                System.out.println("\n PING: Server Receiving is alive");
-            } catch (InterruptedException e) {
+                receiveTransactions(transact);
+                // Thread.sleep(1000);
+                // System.out.println("\n PING: Server Receiving is alive");
+            } catch (Exception e) {
                 e.printStackTrace();
             }
-            // System.out.println("\n Terminating client"+ getClientOperation() + "thread - " + " Running time " + (serverEndTime - serverStartTime) + " milliseconds");
+
+            receiveClientEndTime = System.currentTimeMillis();
+            System.out.println("\n Terminating Client "+ getClientOperation() + " thread - " + " Running time " + (receiveClientEndTime - receiveClientStartTime) + " milliseconds");
         }
 
     }

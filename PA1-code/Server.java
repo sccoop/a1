@@ -197,7 +197,8 @@ public class Server extends Thread {
          while ((!objNetworkServer.getClientConnectionStatus().equals("disconnected")))
          { 
         	 /* while( (objNetworkServer.getInBufferStatus().equals("empty"))); */  /* Alternatively, busy-wait until the network input buffer is available */
-        	 
+        	 Thread.yield();
+
         	 if (!objNetworkServer.getInBufferStatus().equals("empty"))
         	 {  //--21
         		 System.out.println("\n DEBUG : Server.processTransactions() - transferring in account " + trans.getAccountNumber());
@@ -236,7 +237,7 @@ public class Server extends Thread {
         				 } 
         		        		 
         		 // while( (objNetworkServer.getOutBufferStatus().equals("full"))); /* Alternatively,  busy-wait until the network output buffer is available */
-                                                           
+                 Thread.yield();                                          
         		 System.out.println("\n DEBUG : Server.processTransactions() - transferring out account " + trans.getAccountNumber());
         		 
         		 objNetworkServer.transferOut(trans);                            		/* Transfer a completed transaction from the server to the network output buffer */
@@ -308,41 +309,17 @@ public class Server extends Thread {
      */
     public void run()
     {   Transactions trans = new Transactions();
-    	// long serverStartTime, serverEndTime;
+    	long serverStartTime, serverEndTime;
+        serverStartTime= System.currentTimeMillis();
+        
         //--8 context: objNetworkServer.getServerConnectionStatus() returns 'connected'
     	System.out.println("\n DEBUG : Server.run() - starting server thread " + objNetworkServer.getServerConnectionStatus());
     	
-        //--myComment run server while it's network status is connected
-        while(objNetworkServer.getServerConnectionStatus().equals("connected") && !objNetworkServer.getOutBufferStatus().equals("full") && !objNetworkServer.getOutBufferStatus().equals("full"))
-    	{
-            try {
-                
-                Thread.sleep(1000);
-                System.out.println("\n PING: Server Network is alive & waiting for input or output buffer");
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        while(objNetworkServer.getServerConnectionStatus().equals("connected") && objNetworkServer.getInBufferStatus().equals("full")  )
-    	{
-            try {
-                Thread.sleep(1000);
-                System.out.println("\n PING: Server Network is alive & detected InBuffer=FULL");
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        while(objNetworkServer.getServerConnectionStatus().equals("connected") && objNetworkServer.getOutBufferStatus().equals("full")  )
-    	{
-            try {
-                Thread.sleep(1000);
-                System.out.println("\n PING: Server Network is alive & detected OutBuffer=FULL");
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
 
-        // System.out.println("\n Terminating server thread - " + " Running time " + (serverEndTime - serverStartTime) + " milliseconds");
+        processTransactions(trans);
+
+        serverEndTime= System.currentTimeMillis();
+        System.out.println("\n Terminating server thread - " + " Running time " + (serverEndTime - serverStartTime) + " milliseconds");
     }
 }
 
