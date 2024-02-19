@@ -22,7 +22,7 @@ public class Server extends Thread {
 	int numberOfAccounts;             /* Number of accounts stored in the server */
 	int maxNbAccounts;                /* maximum number of transactions */
 	Transactions transaction;         /* Transaction being processed */
-	Network objNetworkServer;               /* Server object to handle network operations */
+	Network objNetwork;               /* Server object to handle network operations */
 	Accounts [] account;              /* Accounts to be accessed or updated */
   
     /** 
@@ -40,13 +40,13 @@ public class Server extends Thread {
       maxNbAccounts = 100;
       transaction = new Transactions();
       account = new Accounts[maxNbAccounts];
-      objNetworkServer = new Network("server");
+      objNetwork = new Network("server");
       //--5
       System.out.println("\n Inializing the Accounts database ...");
       initializeAccounts( );
       //--7
       System.out.println("\n Connecting server to network ...");
-      if (!(objNetworkServer.connect(objNetworkServer.getServerIP())))
+      if (!(objNetwork.connect(objNetwork.getServerIP())))
       {
         System.out.println("\n Terminating server application, network unavailable");
         System.exit(0);
@@ -133,7 +133,7 @@ public class Server extends Thread {
         try
         {
          inputStream = new Scanner(new FileInputStream("C:\\n" + //
-                          "ika_chychkova\\repos\\a1_concurrency\\a1\\PA1-code\\account.txt"));
+                          "ika_chychkova\\repos\\a1_concurrency\\a1\\src\\pa1\\account.txt"));
         }
         catch(FileNotFoundException e)
         {
@@ -195,56 +195,64 @@ public class Server extends Thread {
          double newBalance; 		/* Updated account balance */
               
          /* Process the accounts until the client disconnects */
-         while ((!objNetworkServer.getClientConnectionStatus().equals("disconnected")))
+         while ((!objNetwork.getClientConnectionStatus().equals("disconnected")))
          { 
-        	 /* while( (objNetworkServer.getInBufferStatus().equals("empty"))); */  /* Alternatively, busy-wait until the network input buffer is available */
-        	 Thread.yield();
+        	/* while( (objNetwork.getInBufferStatus().equals("empty"))); */  /* Alternatively, busy-wait until the network input buffer is available */
 
-        	 if (!objNetworkServer.getInBufferStatus().equals("empty"))
-        	 {  //--21
-        		 System.out.println("\n DEBUG : Server.processTransactions() - transferring in account " + trans.getAccountNumber());
-        		 
-        		 objNetworkServer.transferIn(trans);                              /* Transfer a transaction from the network input buffer */
-             
-        		 accIndex = findAccount(trans.getAccountNumber());
-        		 /* Process deposit operation */
-        		 if (trans.getOperationType().equals("DEPOSIT"))
-        		 {
-        			 newBalance = deposit(accIndex, trans.getTransactionAmount()); 
-        			 trans.setTransactionBalance(newBalance);
-        			 trans.setTransactionStatus("done");
-        			 
-        			 System.out.println("\n DEBUG : Server.processTransactions() - Deposit of " + trans.getTransactionAmount() + " in account " + trans.getAccountNumber());
-        		 }
-        		 else
-        			 /* Process withdraw operation */
-        			 if (trans.getOperationType().equals("WITHDRAW"))
-        			 {
-        				 newBalance = withdraw(accIndex, trans.getTransactionAmount());
-        				 trans.setTransactionBalance(newBalance);
-        				 trans.setTransactionStatus("done");
-        				 
-        				 System.out.println("\n DEBUG : Server.processTransactions() - Withdrawal of " + trans.getTransactionAmount() + " from account " + trans.getAccountNumber());
-        			 }
-        			 else
-        				 /* Process query operation */
-        				 if (trans.getOperationType().equals("QUERY"))
-        				 {
-                            newBalance = query(accIndex);
+            // synchronized(objNetwork){     
+                while(objNetwork.getInBufferStatus().equals("empty")){
+                    Thread.yield();
+                } 
+
+                if (!objNetwork.getInBufferStatus().equals("empty")){  
+                    //--21
+                    System.out.println("\n DEBUG : Server.processTransactions() - transferring in account " + trans.getAccountNumber());
+                    
+                    objNetwork.transferIn(trans);                              /* Transfer a transaction from the network input buffer */
+                
+                    accIndex = findAccount(trans.getAccountNumber());
+                    /* Process deposit operation */
+                    if (trans.getOperationType().equals("DEPOSIT"))
+                        {
+                        newBalance = deposit(accIndex, trans.getTransactionAmount()); 
+                        trans.setTransactionBalance(newBalance);
+                        trans.setTransactionStatus("done");
+                        
+                        System.out.println("\n DEBUG : Server.processTransactions() - Deposit of " + trans.getTransactionAmount() + " in account " + trans.getAccountNumber());
+                        }
+                        else
+                        /* Process withdraw operation */
+                    if (trans.getOperationType().equals("WITHDRAW"))
+                        {
+                            newBalance = withdraw(accIndex, trans.getTransactionAmount());
                             trans.setTransactionBalance(newBalance);
                             trans.setTransactionStatus("done");
                             
-                            System.out.println("\n DEBUG : Server.processTransactions() - Obtaining balance from account" + trans.getAccountNumber());
-        				 } 
-        		        		 
-        		 // while( (objNetworkServer.getOutBufferStatus().equals("full"))); /* Alternatively,  busy-wait until the network output buffer is available */
-                 Thread.yield();                                          
-        		 System.out.println("\n DEBUG : Server.processTransactions() - transferring out account " + trans.getAccountNumber());
-        		 
-        		 objNetworkServer.transferOut(trans);                            		/* Transfer a completed transaction from the server to the network output buffer */
-        		 setNumberOfTransactions( (getNumberOfTransactions() +  1) ); 	/* Count the number of transactions processed */
-        	 }
-         }
+                            System.out.println("\n DEBUG : Server.processTransactions() - Withdrawal of " + trans.getTransactionAmount() + " from account " + trans.getAccountNumber());
+                        }
+                        else
+                        /* Process query operation */
+                    if (trans.getOperationType().equals("QUERY"))
+                        {
+                        newBalance = query(accIndex);
+                        trans.setTransactionBalance(newBalance);
+                        trans.setTransactionStatus("done");
+                        
+                        System.out.println("\n DEBUG : Server.processTransactions() - Obtaining balance from account" + trans.getAccountNumber());
+                        } 
+                                        
+                    // while( (objNetwork.getOutBufferStatus().equals("full"))); /* Alternatively,  busy-wait until the network output buffer is available */
+                    while(objNetwork.getOutBufferStatus().equals("full")){
+                        Thread.yield();
+                    }
+
+                    System.out.println("\n DEBUG : Server.processTransactions() - transferring out account " + trans.getAccountNumber());
+                    
+                    objNetwork.transferOut(trans);                            		/* Transfer a completed transaction from the server to the network output buffer */
+                    setNumberOfTransactions( (getNumberOfTransactions() +  1) ); 	/* Count the number of transactions processed */
+                }
+            // } 
+        }
          
          System.out.println("\n DEBUG : Server.processTransactions() - " + getNumberOfTransactions() + " accounts updated");
               
@@ -299,7 +307,7 @@ public class Server extends Thread {
      */
      public String toString() 
      {	
-    	 return ("\n server IP " + objNetworkServer.getServerIP() + "connection status " + objNetworkServer.getServerConnectionStatus() + "Number of accounts " + getNumberOfAccounts());
+    	 return ("\n server IP " + objNetwork.getServerIP() + "connection status " + objNetwork.getServerConnectionStatus() + "Number of accounts " + getNumberOfAccounts());
      }
 
     /**
@@ -313,12 +321,12 @@ public class Server extends Thread {
     	long serverStartTime, serverEndTime;
         serverStartTime= System.currentTimeMillis();
         
-        //--8 context: objNetworkServer.getServerConnectionStatus() returns 'connected'
-    	System.out.println("\n DEBUG : Server.run() - starting server thread " + objNetworkServer.getServerConnectionStatus());
-    	
+        //--8 context: objNetwork.getServerConnectionStatus() returns 'connected'
+    	System.out.println("\n DEBUG : Server.run() - starting server thread " + objNetwork.getServerConnectionStatus());
+
         processTransactions(trans);
     	
-        objNetworkServer.disconnect("216.120.40.10");
+        objNetwork.disconnect("216.120.40.10");
         serverEndTime= System.currentTimeMillis();
         System.out.println("\n Terminating server thread - " + " Running time " + (serverEndTime - serverStartTime) + " milliseconds");
     }
